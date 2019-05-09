@@ -7,15 +7,17 @@
 
     <link rel="stylesheet" href="~/css/site.css" />
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.css" />
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.2/css/all.css" integrity="sha384-oS3vJWv+0UjzBfQzYUhtDYW+Pj2yciDJxpsK1OYPAYjqT085Qq/1cq5FLXAZQ7Ay" crossorigin="anonymous">
 
     <link rel="stylesheet" href="~/lib/bootstrap-fileinput/css/fileinput.css" media="all" />
     <link rel="stylesheet" href="~/lib/bootstrap-fileinput/themes/explorer-fas/theme.css" media="all" />
 
-    <script src="~/js/site.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
     <script src="~/lib/jquery/dist/jquery.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.js"></script>
 
     <script src="~/lib/bootstrap-fileinput/scripts/plugins/sortable.js"></script>
+    <script src="~/lib/bootstrap-fileinput/scripts/plugins/piexif.js"></script>
     <script src="~/lib/bootstrap-fileinput/scripts/fileinput.js"></script>
     <script src="~/lib/bootstrap-fileinput/scripts/locales/zh.js"></script>
     <script src="~/lib/bootstrap-fileinput/themes/fas/theme.js"></script>
@@ -48,12 +50,6 @@
             @RenderBody()
         </main>
     </div>
-
-    <footer class="border-top footer text-muted" style="height:inherit">
-        <div class="container">
-            &copy; 2019 - FileUploadDownload
-        </div>
-    </footer>
 
     @RenderSection("Scripts", required: false)
 </body>
