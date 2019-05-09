@@ -4,8 +4,22 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - FileUploadDownload</title>
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.css" />
+
     <link rel="stylesheet" href="~/css/site.css" />
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.css" />
+
+    <link rel="stylesheet" href="~/lib/bootstrap-fileinput/css/fileinput.css" media="all" />
+    <link rel="stylesheet" href="~/lib/bootstrap-fileinput/themes/explorer-fas/theme.css" media="all" />
+
+    <script src="~/js/site.js"></script>
+    <script src="~/lib/jquery/dist/jquery.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.js"></script>
+
+    <script src="~/lib/bootstrap-fileinput/scripts/plugins/sortable.js"></script>
+    <script src="~/lib/bootstrap-fileinput/scripts/fileinput.js"></script>
+    <script src="~/lib/bootstrap-fileinput/scripts/locales/zh.js"></script>
+    <script src="~/lib/bootstrap-fileinput/themes/fas/theme.js"></script>
+    <script src="~/lib/bootstrap-fileinput/themes/explorer-fas/theme.js"></script>
 </head>
 <body>
     <header>
@@ -35,15 +49,11 @@
         </main>
     </div>
 
-    <footer class="border-top footer text-muted">
+    <footer class="border-top footer text-muted" style="height:inherit">
         <div class="container">
             &copy; 2019 - FileUploadDownload
         </div>
     </footer>
-
-    <script src="~/lib/jquery/dist/jquery.js"></script>
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.js"></script>
-    <script src="~/js/site.js" asp-append-version="true"></script>
 
     @RenderSection("Scripts", required: false)
 </body>
