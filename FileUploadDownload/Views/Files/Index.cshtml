@@ -26,7 +26,7 @@
     <script>
         $('.btn-download-file').on('click', (event) => {
             let fileName = $(event.target).data('file-name');
-            console.log(fileName);
+            self.location.href = `/Files/DownloadFile?fileName=${fileName}`;
         });
     </script>
 }

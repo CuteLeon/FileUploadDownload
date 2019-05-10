@@ -172,5 +172,32 @@ namespace FileUploadDownload.Controllers
             return this.View(files);
         }
         #endregion
+
+        #region 下载文件
+
+        /// <summary>
+        /// 下载文件
+        /// </summary>
+        /// <param name="fileName"></param>
+        /// <returns></returns>
+        public async Task<IActionResult> DownloadFile(string fileName)
+        {
+            var result = await Task.Factory.StartNew<IActionResult>(() =>
+            {
+                var path = Path.Combine(UploadFilsDirectory.Value, fileName);
+                if (!System.IO.File.Exists(path))
+                {
+                    return this.NotFound(path);
+                }
+
+                return this.File(
+                    new FileStream(path, FileMode.Open, FileAccess.Read),
+                    "application/octet-stream",
+                    Path.GetFileName(path));
+            });
+
+            return result;
+        }
+        #endregion
     }
 }
