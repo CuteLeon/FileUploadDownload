@@ -11,19 +11,20 @@
         </h1>
     </div>
     <hr />
-    <form enctype="multipart/form-data">
+    <form asp-controller="Files" asp-action="UploadFileInput" enctype="multipart/form-data">
         <div class="file-loading">
-            <input class="file" type="file"
+            <input class="file" type="file" name="uploadFiles"
                    multiple
                    data-min-file-count="1"
                    data-show-upload="true"
                    data-preview-file-type="image"
-                   data-upload-url="#"
+                   data-upload-url="/Files/UploadFileBootstrap"
                    data-theme="fas">
         </div>
+        <div class="w-100" style="        margin: 6px"></div>
+        <input type="submit" class="btn btn-success btn-block" value="手动上传" />
     </form>
 </div>
-
 <script>
     $('.file').fileinput({
         language: 'zh',
