@@ -1,0 +1,32 @@
+﻿@model IEnumerable<FileInfo>
+
+@{
+    ViewData["Title"] = "文件";
+    string directoryPath = this.ViewData["UploadFilsDirectory"] as string;
+}
+
+<div class="container">
+    <div class="row">
+        <div class="spinner-grow text-warning" role="status">
+        </div>
+        <h1>文件</h1>
+    </div>
+    <span class="badge badge-pill badge-primary shadow">@directoryPath</span>
+    <hr />
+
+    <div class="container-fluid">
+        @foreach (var file in this.Model)
+        {
+            await Html.RenderPartialAsync("FileInfoPartial", file);
+        }
+    </div>
+</div>
+
+@section Scripts{
+    <script>
+        $('.btn-download-file').on('click', (event) => {
+            let fileName = $(event.target).data('file-name');
+            console.log(fileName);
+        });
+    </script>
+}

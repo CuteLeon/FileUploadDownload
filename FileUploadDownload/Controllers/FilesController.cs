@@ -42,6 +42,8 @@ namespace FileUploadDownload.Controllers
                 return path;
             }, true);
 
+        #region 上传文件
+
         /// <summary>
         /// 上传文件
         /// </summary>
@@ -148,5 +150,27 @@ namespace FileUploadDownload.Controllers
                 Console.WriteLine($"接收文件结束：{file.FileName} ({file.Length} 字节), 耗时: {stopwatch.Elapsed.ToString()}");
             }
         }
+        #endregion
+
+        #region 主页
+
+        /// <summary>
+        /// 主页
+        /// </summary>
+        /// <returns></returns>
+        public async Task<IActionResult> Index()
+        {
+            var directoryPath = UploadFilsDirectory.Value;
+            if (!Directory.Exists(directoryPath))
+            {
+                return this.NotFound(directoryPath);
+            }
+
+            this.ViewData.Add("UploadFilsDirectory", directoryPath);
+            var files = await Task.Factory.StartNew(() => new DirectoryInfo(UploadFilsDirectory.Value)?.GetFiles());
+            files = files.OrderBy(file => file.CreationTime).ThenBy(file => file.Name).ToArray();
+            return this.View(files);
+        }
+        #endregion
     }
 }
