@@ -84,7 +84,40 @@ namespace FileUploadDownload.Controllers
                 }
             }
 
-            return this.Ok(new { message = $"收到 {files.Count} 个文件，共 {files.Sum(file => file.Length)} 字节" });
+            return this.Ok();
+        }
+
+        /// <summary>
+        /// 上传文件
+        /// </summary>
+        /// <returns></returns>
+        /// <remarks>使用 Ajax 上传多个文件时，可能会因为请求数据过大而出错</remarks>
+        [DisableRequestSizeLimit]
+        public async Task<IActionResult> UploadFileAjax()
+        {
+            IFormFileCollection files;
+
+            try
+            {
+                files = this.HttpContext.Request.Form.Files;
+            }
+            catch (Exception ex)
+            {
+                return this.BadRequest(ex.Message);
+            }
+
+            foreach (var file in files)
+            {
+                try
+                {
+                    await this.ReceiveFileAsync(file);
+                }
+                catch
+                {
+                }
+            }
+
+            return this.Ok(new { Message = $"收到 {files.Count} 个文件，共 {files.Sum(file => file.Length)} 字节" });
         }
 
         /// <summary>
