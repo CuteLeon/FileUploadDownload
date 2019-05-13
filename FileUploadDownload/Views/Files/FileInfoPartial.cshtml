@@ -1,20 +1,12 @@
 ﻿@model FileInfo
 
-<div class="alert alert-secondary shadow-sm" role="alert">
-    <div class="container-fluid">
-        <div class="row">
-            <div class="col-sm-10">
-                <strong class="text-primary">@this.Model.Name</strong> <span class="badge badge-warning">@this.Model.Extension</span>
-            </div>
-            <div class="col-sm-2">
-                <button type="button" data-file-name="@this.Model.Name" class="btn-download-file btn btn-sm btn-primary text-truncate w-100 shadow">下载文件</button>
-            </div>
-        </div>
-        <div class="row">
-            <div class="col-sm text-truncate">
-                <strong>文件路径：</strong>@this.Model.FullName
-            </div>
-        </div>
+<div class="card" style="        width: 10rem">
+    @if (this.Model.Exists)
+    {
+        <img class="card-img bg-light" src="..\ThumbnailFiles\@this.Model.Name" alt="@this.Model.Name">
+    }
+    <div class="card-img-overlay">
+        <strong class="text-primary">@this.Model.Name</strong> <span class="badge badge-warning">@this.Model.Extension</span>
         <div class="row">
             <div class="col-sm">
                 <strong>创建时间：</strong>@this.Model.CreationTime.ToString("yyyy-MM-dd hh:mm:ss.fff");
@@ -24,4 +16,8 @@
             </div>
         </div>
     </div>
+    <div class="card-footer">
+        <button type="button" data-file-name="@this.Model.Name" class="btn-download-file btn btn-sm btn-primary btn-block text-truncate shadow">下载文件</button>
+    </div>
 </div>
+
