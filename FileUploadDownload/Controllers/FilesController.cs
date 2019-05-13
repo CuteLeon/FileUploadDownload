@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Drawing;
+using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -18,6 +20,11 @@ namespace FileUploadDownload.Controllers
         /// 上传文件目录名称
         /// </summary>
         private const string UploadFilsDirectoryName = "UploadFiles";
+
+        /// <summary>
+        /// 缩略文件目录名称
+        /// </summary>
+        private const string ThumbnailFileDirectoryName = "ThumbnailFiles";
 
         /// <summary>
         /// 上传文件目录
@@ -42,6 +49,28 @@ namespace FileUploadDownload.Controllers
                 return path;
             }, true);
 
+        /// <summary>
+        /// 缩略文件目录
+        /// </summary>
+        private readonly static Lazy<string> ThumbnailFileDirectory = new Lazy<string>(() =>
+        {
+            string path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, ThumbnailFileDirectoryName);
+            Console.WriteLine($"缩略文件目录：{path}");
+
+            if (!Directory.Exists(path))
+            {
+                try
+                {
+                    Directory.CreateDirectory(path);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"创建缩略文件目录失败：{ex.Message}");
+                }
+            }
+
+            return path;
+        }, true);
         #region 上传文件
 
         /// <summary>
@@ -86,7 +115,11 @@ namespace FileUploadDownload.Controllers
                 }
             }
 
-            return this.Ok();
+            // 成功接收可以直接返回 Json
+            return this.Json($"成功接收 {files.Count} 个文件：{string.Join("、", files.Select(file => file.FileName))}");
+
+            // 拒收也要最消息转义为 Json (外加双引号)
+            return this.BadRequest($"\"拒收了文件：{string.Join("、", files.Select(file => file.FileName))}\"");
         }
 
         /// <summary>
@@ -136,8 +169,12 @@ namespace FileUploadDownload.Controllers
             try
             {
                 Console.WriteLine($"接收文件：{filePath}");
-                using Stream stream = new FileStream(filePath, FileMode.Create, FileAccess.Write, FileShare.None);
+                using Stream stream = new FileStream(filePath, FileMode.Create, FileAccess.ReadWrite, FileShare.None);
+
                 await file.CopyToAsync(stream);
+                stream.Flush();
+
+                this.SaveThumbnail(stream, file.FileName);
             }
             catch (Exception ex)
             {
@@ -148,6 +185,31 @@ namespace FileUploadDownload.Controllers
             {
                 stopwatch.Stop();
                 Console.WriteLine($"接收文件结束：{file.FileName} ({file.Length} 字节), 耗时: {stopwatch.Elapsed.ToString()}");
+            }
+        }
+
+        /// <summary>
+        /// 保存文件缩略图
+        /// </summary>
+        /// <param name="stream"></param>
+        /// <param name="fileName"></param>
+        protected void SaveThumbnail(Stream stream, string fileName)
+        {
+            try
+            {
+                string thumbnailPath = $"{Path.Combine(ThumbnailFileDirectory.Value, fileName)}.jpg";
+                Console.WriteLine($"生成缩略图：{thumbnailPath}");
+
+                using var image = Image.FromStream(stream);
+                if (image != null)
+                {
+                    using var thumbnail = image.GetThumbnailImage(100, 100, null, IntPtr.Zero);
+                    thumbnail.Save(thumbnailPath, ImageFormat.Jpeg);
+                }
+            }
+            catch (Exception imageEx)
+            {
+                Console.WriteLine($"生成缩略图失败：{imageEx.Message}");
             }
         }
         #endregion
