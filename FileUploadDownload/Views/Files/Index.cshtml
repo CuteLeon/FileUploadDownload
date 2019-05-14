@@ -15,7 +15,7 @@
     <hr />
 
     <div class="container-fluid">
-        <div class="card-deck">
+        <div class="card-columns">
             @foreach (var file in this.Model)
             {
                 @await Html.PartialAsync("FileInfoPartial", file)

@@ -1,18 +1,15 @@
 ﻿@model FileInfo
 
-<div class="card" style="        width: 10rem">
-    @if (this.Model.Exists)
-    {
-        <img class="card-img bg-light" src="..\ThumbnailFiles\@this.Model.Name" alt="@this.Model.Name">
-    }
-    <div class="card-img-overlay">
-        <strong class="text-primary">@this.Model.Name</strong> <span class="badge badge-warning">@this.Model.Extension</span>
-        <div class="row">
-            <div class="col-sm">
+<div class="card">
+    <img class="card-img-top bg-light" src="@Url.Action("ThumbnailFile", "Files", new { fileName = $"{this.Model.Name}.jpg" })" alt="@this.Model.Name">
+    <div class="card-body">
+        <span class="badge badge-warning">@this.Model.Extension</span><strong class="text-primary">@this.Model.Name</strong>
+        <div class="col-sm">
+            <div class="row">
                 <strong>创建时间：</strong>@this.Model.CreationTime.ToString("yyyy-MM-dd hh:mm:ss.fff");
             </div>
-            <div class="col-sm">
-                <strong>文件大小：</strong>@this.Model.Length 字节
+            <div class="row">
+                <strong>文件大小：</strong>@this.Model.Length.ToString("N0") 字节
             </div>
         </div>
     </div>

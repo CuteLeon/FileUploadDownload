@@ -203,7 +203,7 @@ namespace FileUploadDownload.Controllers
                 using var image = Image.FromStream(stream);
                 if (image != null)
                 {
-                    using var thumbnail = image.GetThumbnailImage(100, 100, null, IntPtr.Zero);
+                    using var thumbnail = image.GetThumbnailImage(200, 200, null, IntPtr.Zero);
                     thumbnail.Save(thumbnailPath, ImageFormat.Jpeg);
                 }
             }
@@ -238,18 +238,49 @@ namespace FileUploadDownload.Controllers
         #region 下载文件
 
         /// <summary>
+        /// 缩略文件
+        /// </summary>
+        /// <param name="fileName"></param>
+        /// <returns></returns>
+        public async Task<IActionResult> ThumbnailFile(string fileName)
+        {
+            if (string.IsNullOrEmpty(fileName))
+            {
+                return this.File("~/images/unknown.png", "image/png");
+            }
+
+            var result = await Task.Factory.StartNew<IActionResult>(() =>
+             {
+                 var path = Path.Combine(ThumbnailFileDirectory.Value, fileName);
+                 if (!System.IO.File.Exists(path))
+                 {
+                     return this.File("~/images/unknown.png", "image/png");
+                 }
+
+                 return this.File(new FileStream(path, FileMode.Open, FileAccess.Read), "image/jpeg");
+             });
+
+            return result;
+        }
+
+        /// <summary>
         /// 下载文件
         /// </summary>
         /// <param name="fileName"></param>
         /// <returns></returns>
         public async Task<IActionResult> DownloadFile(string fileName)
         {
+            if (string.IsNullOrEmpty(fileName))
+            {
+                return this.File("~/images/unknown.png", "application/octet-stream", "unknown.png");
+            }
+
             var result = await Task.Factory.StartNew<IActionResult>(() =>
             {
                 var path = Path.Combine(UploadFilsDirectory.Value, fileName);
                 if (!System.IO.File.Exists(path))
                 {
-                    return this.NotFound(path);
+                    return this.File("~/images/unknown.png", "application/octet-stream", "unknown.png");
                 }
 
                 return this.File(
