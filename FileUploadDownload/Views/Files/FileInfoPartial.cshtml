@@ -1,6 +1,6 @@
 ﻿@model FileInfo
 
-<div class="card">
+<div class="card shadow">
     <img class="card-img-top bg-light" src="@Url.Action("ThumbnailFile", "Files", new { fileName = $"{this.Model.Name}.jpg" })" alt="@this.Model.Name">
     <div class="card-body">
         <span class="badge badge-warning">@this.Model.Extension</span><strong class="text-primary">@this.Model.Name</strong>
