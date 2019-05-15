@@ -203,13 +203,36 @@ namespace FileUploadDownload.Controllers
                 using var image = Image.FromStream(stream);
                 if (image != null)
                 {
-                    using var thumbnail = image.GetThumbnailImage(200, 200, null, IntPtr.Zero);
+                    var size = this.GetThumnailSize(image.Size);
+                    using var thumbnail = image.GetThumbnailImage(size.Width, size.Height, null, IntPtr.Zero);
                     thumbnail.Save(thumbnailPath, ImageFormat.Jpeg);
                 }
             }
             catch (Exception imageEx)
             {
                 Console.WriteLine($"生成缩略图失败：{imageEx.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 获取缩略图尺寸
+        /// </summary>
+        /// <param name="originalSize"></param>
+        /// <returns></returns>
+        protected Size GetThumnailSize(Size originalSize)
+        {
+            const int maxSide = 200;
+            if (originalSize.Width == originalSize.Height)
+            {
+                return new Size(maxSide, maxSide);
+            }
+            else if (originalSize.Width > originalSize.Height)
+            {
+                return new Size(maxSide, (int)(maxSide * ((double)originalSize.Height / originalSize.Width)));
+            }
+            else
+            {
+                return new Size((int)(maxSide * ((double)originalSize.Width / originalSize.Height)), maxSide);
             }
         }
         #endregion
