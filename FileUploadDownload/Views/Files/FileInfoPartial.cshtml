@@ -9,12 +9,15 @@
                 <strong>创建时间：</strong>@this.Model.CreationTime.ToString("yyyy-MM-dd hh:mm:ss.fff");
             </div>
             <div class="row">
-                <strong>文件大小：</strong>@this.Model.Length.ToString("N0") 字节
+                <strong>文件大小：</strong>@Helper.FormatFileSize(this.Model.Length)
             </div>
         </div>
     </div>
     <div class="card-footer">
-        <button type="button" data-file-name="@this.Model.Name" class="btn-download-file btn btn-sm btn-primary btn-block text-truncate shadow">下载文件</button>
+        <div class="btn-group btn-group-sm w-100 shadow">
+            <button type="button" data-file-name="@this.Model.Name" class="btn-delete-file btn btn-sm btn-danger text-truncate">删除</button>
+            <button type="button" data-file-name="@this.Model.Name" class="btn-download-file btn btn-sm btn-primary text-truncate">下载</button>
+        </div>
     </div>
 </div>
 
