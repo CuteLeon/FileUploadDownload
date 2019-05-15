@@ -30,5 +30,21 @@
             let fileName = $(event.target).data('file-name');
             self.location.href = `/Files/DownloadFile?fileName=${fileName}`;
         });
+        $('.btn-delete-file').on('click', (event) => {
+            let fileName = $(event.target).data('file-name');
+            $.get({
+                url: `/Files/DeleteFile?fileName=${fileName}`,
+                cache: false,
+            })
+                .done((result) => {
+                    $(event.target).parents('.card')
+                        .fadeOut(500, (e) => {
+                            e.remove();
+                        });
+                })
+                .fail((exception) => {
+                    alert(exception);
+                });
+        });
     </script>
 }

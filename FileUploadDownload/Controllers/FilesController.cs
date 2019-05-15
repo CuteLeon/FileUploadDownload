@@ -119,7 +119,7 @@ namespace FileUploadDownload.Controllers
             return this.Json($"成功接收 {files.Count} 个文件：{string.Join("、", files.Select(file => file.FileName))}");
 
             // 拒收也要最消息转义为 Json (外加双引号)
-            return this.BadRequest($"\"拒收了文件：{string.Join("、", files.Select(file => file.FileName))}\"");
+            // return this.BadRequest($"\"拒收了文件：{string.Join("、", files.Select(file => file.FileName))}\"");
         }
 
         /// <summary>
@@ -161,8 +161,7 @@ namespace FileUploadDownload.Controllers
         /// <param name="file"></param>
         protected async Task ReceiveFileAsync(IFormFile file)
         {
-            var directoryPath = UploadFilsDirectory.Value;
-            var filePath = Path.Combine(directoryPath, file.FileName);
+            var filePath = this.GetFilePath(file.FileName);
 
             Stopwatch stopwatch = new Stopwatch();
             stopwatch.Start();
@@ -197,7 +196,7 @@ namespace FileUploadDownload.Controllers
         {
             try
             {
-                string thumbnailPath = $"{Path.Combine(ThumbnailFileDirectory.Value, fileName)}.jpg";
+                string thumbnailPath = this.GetThumnailPath(fileName);
                 Console.WriteLine($"生成缩略图：{thumbnailPath}");
 
                 using var image = Image.FromStream(stream);
@@ -256,6 +255,22 @@ namespace FileUploadDownload.Controllers
             files = files.OrderBy(file => file.CreationTime).ThenBy(file => file.Name).ToArray();
             return this.View(files);
         }
+
+        /// <summary>
+        /// 获取文件路径
+        /// </summary>
+        /// <param name="fileName"></param>
+        /// <returns></returns>
+        public string GetFilePath(string fileName)
+            => Path.Combine(UploadFilsDirectory.Value, fileName);
+
+        /// <summary>
+        /// 获取缩略文件路径
+        /// </summary>
+        /// <param name="fileName"></param>
+        /// <returns></returns>
+        public string GetThumnailPath(string fileName)
+            => $"{Path.Combine(ThumbnailFileDirectory.Value, fileName)}.jpg";
         #endregion
 
         #region 下载文件
@@ -274,7 +289,7 @@ namespace FileUploadDownload.Controllers
 
             var result = await Task.Factory.StartNew<IActionResult>(() =>
              {
-                 var path = Path.Combine(ThumbnailFileDirectory.Value, fileName);
+                 var path = this.GetThumnailPath(fileName);
                  if (!System.IO.File.Exists(path))
                  {
                      return this.File("~/images/unknown.png", "image/png");
@@ -300,7 +315,7 @@ namespace FileUploadDownload.Controllers
 
             var result = await Task.Factory.StartNew<IActionResult>(() =>
             {
-                var path = Path.Combine(UploadFilsDirectory.Value, fileName);
+                var path = this.GetFilePath(fileName);
                 if (!System.IO.File.Exists(path))
                 {
                     return this.File("~/images/unknown.png", "application/octet-stream", "unknown.png");
@@ -314,6 +329,37 @@ namespace FileUploadDownload.Controllers
 
             return result;
         }
+        #endregion
+
+        #region 删除文件
+
+        /// <summary>
+        /// 删除文件
+        /// </summary>
+        /// <param name="fileName"></param>
+        /// <returns></returns>
+        public async Task<IActionResult> DeleteFile(string fileName)
+            => await Task.Factory.StartNew<IActionResult>(() =>
+                 {
+                     if (string.IsNullOrEmpty(fileName))
+                     {
+                         return this.BadRequest(new { Message = "空的文件名称" });
+                     }
+
+                     Console.WriteLine($"删除文件：{fileName}");
+                     try
+                     {
+                         System.IO.File.Delete(this.GetThumnailPath(fileName));
+                         System.IO.File.Delete(this.GetFilePath(fileName));
+
+                         return this.Ok(new { Message = $"删除 {fileName} 成功" });
+                     }
+                     catch (Exception ex)
+                     {
+                         Console.WriteLine($"删除文件失败：{ex.Message}");
+                         return this.BadRequest(new { Message = ex.Message });
+                     }
+                 });
         #endregion
     }
 }
