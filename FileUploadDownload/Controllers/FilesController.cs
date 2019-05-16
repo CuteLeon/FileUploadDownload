@@ -8,6 +8,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 
 namespace FileUploadDownload.Controllers
 {
@@ -16,6 +17,11 @@ namespace FileUploadDownload.Controllers
     /// </summary>
     public class FilesController : Controller
     {
+        public FilesController(ILogger<FilesController> logger)
+        {
+            this.logger = logger;
+        }
+
         /// <summary>
         /// 上传文件目录名称
         /// </summary>
@@ -32,7 +38,7 @@ namespace FileUploadDownload.Controllers
         private readonly static Lazy<string> UploadFilsDirectory = new Lazy<string>(() =>
             {
                 string path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, UploadFilsDirectoryName);
-                Console.WriteLine($"上传文件目录：{path}");
+                Console.WriteLine($"初始化上传文件目录：{path}");
 
                 if (!Directory.Exists(path))
                 {
@@ -55,7 +61,7 @@ namespace FileUploadDownload.Controllers
         private readonly static Lazy<string> ThumbnailFileDirectory = new Lazy<string>(() =>
         {
             string path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, ThumbnailFileDirectoryName);
-            Console.WriteLine($"缩略文件目录：{path}");
+            Console.WriteLine($"初始化缩略文件目录：{path}");
 
             if (!Directory.Exists(path))
             {
@@ -71,6 +77,12 @@ namespace FileUploadDownload.Controllers
 
             return path;
         }, true);
+
+        /// <summary>
+        /// 日志记录器
+        /// </summary>
+        private readonly ILogger<FilesController> logger;
+
         #region 上传文件
 
         /// <summary>
@@ -161,13 +173,13 @@ namespace FileUploadDownload.Controllers
         /// <param name="file"></param>
         protected async Task ReceiveFileAsync(IFormFile file)
         {
-            var filePath = this.GetFilePath(file.FileName);
+            this.logger.LogInformation($"{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff")} [{this.HttpContext.Connection.Id}] {this.HttpContext.Connection.RemoteIpAddress} 开始上传文件 {file.FileName}");
 
+            var filePath = this.GetFilePath(file.FileName);
             Stopwatch stopwatch = new Stopwatch();
             stopwatch.Start();
             try
             {
-                Console.WriteLine($"接收文件：{filePath}");
                 using Stream stream = new FileStream(filePath, FileMode.Create, FileAccess.ReadWrite, FileShare.None);
 
                 await file.CopyToAsync(stream);
@@ -177,13 +189,14 @@ namespace FileUploadDownload.Controllers
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"接收文件失败：{file.FileName} ({file.Length} 字节), 耗时: {stopwatch.Elapsed.ToString()}\n{ex.ToString()}");
+                this.logger.LogError(ex, $"{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff")} [{this.HttpContext.Connection.Id}] {this.HttpContext.Connection.RemoteIpAddress} 上传文件失败 {file.FileName} ({file.Length} 字节), 耗时: {stopwatch.Elapsed.ToString()}");
+
                 throw;
             }
             finally
             {
                 stopwatch.Stop();
-                Console.WriteLine($"接收文件结束：{file.FileName} ({file.Length} 字节), 耗时: {stopwatch.Elapsed.ToString()}");
+                this.logger.LogInformation($"{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff")} [{this.HttpContext.Connection.Id}] {this.HttpContext.Connection.RemoteIpAddress} 接收文件结束 {file.FileName} ({file.Length} 字节), 耗时: {stopwatch.Elapsed.ToString()}");
             }
         }
 
@@ -194,10 +207,11 @@ namespace FileUploadDownload.Controllers
         /// <param name="fileName"></param>
         protected void SaveThumbnail(Stream stream, string fileName)
         {
+            this.logger.LogInformation($"{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff")} [{this.HttpContext.Connection.Id}] {this.HttpContext.Connection.RemoteIpAddress} 创建缩略文件 {fileName}");
+
             try
             {
                 string thumbnailPath = this.GetThumnailPath(fileName);
-                Console.WriteLine($"生成缩略图：{thumbnailPath}");
 
                 using var image = Image.FromStream(stream);
                 if (image != null)
@@ -207,9 +221,9 @@ namespace FileUploadDownload.Controllers
                     thumbnail.Save(thumbnailPath, ImageFormat.Jpeg);
                 }
             }
-            catch (Exception imageEx)
+            catch (Exception thumbnailEx)
             {
-                Console.WriteLine($"生成缩略图失败：{imageEx.Message}");
+                this.logger.LogError(thumbnailEx, $"{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff")} [{this.HttpContext.Connection.Id}] {this.HttpContext.Connection.RemoteIpAddress} 创建缩略图失败 {fileName}");
             }
         }
 
@@ -244,16 +258,22 @@ namespace FileUploadDownload.Controllers
         /// <returns></returns>
         public async Task<IActionResult> Index()
         {
+            this.logger.LogInformation($"{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff")} [{this.HttpContext.Connection.Id}] {this.HttpContext.Connection.RemoteIpAddress} 访问文件视图");
+
             var directoryPath = UploadFilsDirectory.Value;
-            if (!Directory.Exists(directoryPath))
+            this.ViewData.Add("UploadFilsDirectory", directoryPath);
+
+            var files = Enumerable.Empty<FileInfo>();
+            if (Directory.Exists(directoryPath))
             {
-                return this.NotFound(directoryPath);
+                files = await Task.Factory.StartNew(() =>
+                    new DirectoryInfo(UploadFilsDirectory.Value)?
+                    .GetFiles()
+                    .OrderBy(file => file.CreationTime)
+                    .ThenBy(file => file.Name));
             }
 
-            this.ViewData.Add("UploadFilsDirectory", directoryPath);
-            var files = await Task.Factory.StartNew(() => new DirectoryInfo(UploadFilsDirectory.Value)?.GetFiles());
-            files = files.OrderBy(file => file.CreationTime).ThenBy(file => file.Name).ToArray();
-            return this.View(files);
+            return this.View(files.ToArray());
         }
 
         /// <summary>
@@ -292,6 +312,8 @@ namespace FileUploadDownload.Controllers
                  var path = this.GetThumnailPath(fileName);
                  if (!System.IO.File.Exists(path))
                  {
+                     this.logger.LogWarning($"{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff")} [{this.HttpContext.Connection.Id}] {this.HttpContext.Connection.RemoteIpAddress} 文件 {fileName} 不存在缩略文件");
+
                      return this.File("~/images/unknown.png", "image/png");
                  }
 
@@ -308,6 +330,8 @@ namespace FileUploadDownload.Controllers
         /// <returns></returns>
         public async Task<IActionResult> DownloadFile(string fileName)
         {
+            this.logger.LogInformation($"{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff")} [{this.HttpContext.Connection.Id}] {this.HttpContext.Connection.RemoteIpAddress} 请求下载文件 {fileName}");
+
             if (string.IsNullOrEmpty(fileName))
             {
                 return this.File("~/images/unknown.png", "application/octet-stream", "unknown.png");
@@ -318,6 +342,8 @@ namespace FileUploadDownload.Controllers
                 var path = this.GetFilePath(fileName);
                 if (!System.IO.File.Exists(path))
                 {
+                    this.logger.LogWarning($"{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff")} [{this.HttpContext.Connection.Id}] {this.HttpContext.Connection.RemoteIpAddress} 文件 {fileName} 不存在，无法下载");
+
                     return this.File("~/images/unknown.png", "application/octet-stream", "unknown.png");
                 }
 
@@ -341,23 +367,25 @@ namespace FileUploadDownload.Controllers
         public async Task<IActionResult> DeleteFile(string fileName)
             => await Task.Factory.StartNew<IActionResult>(() =>
                  {
+                     this.logger.LogWarning($"{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff")} [{this.HttpContext.Connection.Id}] {this.HttpContext.Connection.RemoteIpAddress} 请求删除文件 {fileName}");
+
                      if (string.IsNullOrEmpty(fileName))
                      {
-                         return this.BadRequest(new { Message = "空的文件名称" });
+                         return this.BadRequest("无法删除空的文件名称");
                      }
 
-                     Console.WriteLine($"删除文件：{fileName}");
                      try
                      {
                          System.IO.File.Delete(this.GetThumnailPath(fileName));
                          System.IO.File.Delete(this.GetFilePath(fileName));
 
-                         return this.Ok(new { Message = $"删除 {fileName} 成功" });
+                         return this.Ok($"删除 {fileName} 成功");
                      }
                      catch (Exception ex)
                      {
-                         Console.WriteLine($"删除文件失败：{ex.Message}");
-                         return this.BadRequest(new { Message = ex.Message });
+                         this.logger.LogWarning(ex, $"{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff")} [{this.HttpContext.Connection.Id}] {this.HttpContext.Connection.RemoteIpAddress} 删除文件失败 {fileName}");
+
+                         return this.BadRequest(ex.Message);
                      }
                  });
         #endregion

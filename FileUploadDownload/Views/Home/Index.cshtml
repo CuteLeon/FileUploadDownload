@@ -70,7 +70,7 @@
                     alert(result.message);
                 })
                 .fail((exception) => {
-                    alert(exception);
+                    alert(exception.responseText !== undefined ? exception.responseText : "上传文件失败！");
                 });
         });
 
