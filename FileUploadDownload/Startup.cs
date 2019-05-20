@@ -18,8 +18,9 @@ namespace FileUploadDownload
 
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddMvc()
+            services.AddControllersWithViews()
                 .AddNewtonsoftJson();
+            services.AddRazorPages();
 
             // 配置请求数据长度限制
             services.Configure<FormOptions>(options =>
@@ -45,6 +46,7 @@ namespace FileUploadDownload
             app.UseHttpsRedirection();
             app.UseStaticFiles();
 
+            app.UseRouting();
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllerRoute(
