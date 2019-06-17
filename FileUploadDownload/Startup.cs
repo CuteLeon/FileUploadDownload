@@ -20,7 +20,8 @@ namespace FileUploadDownload
         {
             services.AddControllersWithViews()
                 .AddNewtonsoftJson();
-            services.AddRazorPages();
+            services.AddRazorPages()
+                .AddRazorRuntimeCompilation();
 
             // 配置请求数据长度限制
             services.Configure<FormOptions>(options =>
