@@ -44,7 +44,7 @@ namespace FileUploadDownload
             }
 
             app.UseMiddleware<ConnectMiddleware>();
-            app.UseHttpsRedirection();
+            // app.UseHttpsRedirection();
             app.UseStaticFiles();
 
             app.UseRouting();
